@@ -7,8 +7,20 @@ output: github_document
 
 ```{r setup}
 library(tidyverse)
+library(viridis)
 
-## maybe include some global formatting/mapping here ##
+knitr::opts_chunk$set(
+	fig.width = 6, 
+  fig.asp = .6,
+  out.width = "90%"
+)
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
 ```
 
 ## Problem 1
@@ -92,12 +104,36 @@ accel_df =
   ) %>% 
   relocate(week, day_id, day, weekday)
 ```
+The accelerometer data set includes `r nrow(accel_df)` observations, which represent minutes of the day, and `r ncol(accel_df)` variables, including activity counts and day of the week. It describes 5 weeks of activity data from an accelerometer worn by one patient, capturing activity each minute. 
+
 
 Aggregate activity data across days. 
+```{r}
+accel_agg = 
+  accel_df %>% 
+  group_by(day) %>% 
+  summarize(total = sum(activity)) 
 
-Create a plot to show aggregated activity data by day.
+accel_agg %>% knitr::kable()
+```
+It seems that the days with the highest total activity are Wednesday, Thursday, and Friday. Saturday has the lowest activity, perhaps due to the patient relaxing on the weekend.
 
+Create a plot to show activity data by day.
+```{r}
+accel_df %>% 
+  ggplot(aes(x = minute, y = activity, group = day_id, color = day)) +
+  geom_line(alpha = 0.3) +
+  geom_smooth(aes(group = day)) +
+  labs(
+    title = "Daily Activity",
+    x = "Minute of the day",
+    y = "Average activity"
+  )
+```
 
+This plot shows the average activity for each minute, grouped by day. Notably, there is a small increase in activity for Thursdays between roughly 8 and 10 AM, and a spike on Fridays between roughly 8 PM and 10 PM. 
+
+## Problem 3
 
 
 
