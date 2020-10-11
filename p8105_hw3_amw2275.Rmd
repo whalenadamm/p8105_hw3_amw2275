@@ -167,7 +167,7 @@ noaa_df %>%
   group_by(id, year, month) %>% 
   summarize(avg_tmax = mean(tmax, na.rm = TRUE)) %>% 
   ggplot(aes(x = year, y = avg_tmax, color = id)) +
-  geom_point(show.legend = FALSE) +
+  geom_point(show.legend = FALSE, alpha = 0.5) +
   facet_grid(. ~ month) +
   labs(
     title = "Average max temperature, January vs July",
