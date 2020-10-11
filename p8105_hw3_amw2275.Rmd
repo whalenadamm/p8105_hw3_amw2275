@@ -8,6 +8,7 @@ output: github_document
 ```{r setup}
 library(tidyverse)
 library(viridis)
+library(patchwork)
 
 knitr::opts_chunk$set(
 	fig.width = 6, 
@@ -116,6 +117,7 @@ accel_agg =
 
 accel_agg %>% knitr::kable()
 ```
+
 It seems that the days with the highest total activity are Wednesday, Thursday, and Friday. Saturday has the lowest activity, perhaps due to the patient relaxing on the weekend.
 
 Create a plot to show activity data by day.
@@ -135,7 +137,72 @@ This plot shows the average activity for each minute, grouped by day. Notably, t
 
 ## Problem 3
 
+Load and clean the NY NOAA data set.
+```{r}
+library(p8105.datasets)
+data("ny_noaa")
 
+noaa_df = 
+  ny_noaa %>% 
+  janitor::clean_names() %>%
+  separate(date, c("year", "month", "day"), sep = "-", convert = TRUE) %>%
+  mutate(
+    month = month.name[as.factor(month)],
+    tmax = as.integer(tmax)/10,
+    tmin = as.integer(tmin)/10,
+    prcp = prcp/10
+  )
 
+noaa_df %>% 
+  ggplot(aes(x = snow)) +
+  geom_histogram()
+```
+
+The NY NOAA data set contains `r nrow(ny_noaa)` observations and `r ncol(ny_noaa)` variables. It describes meteorological data about New York, including precipitation, snowfall, and temperature. The most commonly observed values for snowfall are `NA` or zero, because it doesn't snow in New York year-round. 
+
+Make a two-panel plot showing the average max temperature in January and in July in each station across years.
+```{r}
+noaa_df %>% 
+  filter(month %in% c("January", "July")) %>% 
+  group_by(id, year, month) %>% 
+  summarize(avg_tmax = mean(tmax, na.rm = TRUE)) %>% 
+  ggplot(aes(x = year, y = avg_tmax, color = id)) +
+  geom_point(show.legend = FALSE) +
+  facet_grid(. ~ month) +
+  labs(
+    title = "Average max temperature, January vs July",
+    x = "Year",
+    y = "Average max temperature (C)"
+  )
+```
+
+The two plots are clearly different, in that the vast majority of observed temperatures in January are between -10 and 10 degrees Celsius, whereas July contains mostly temperatures between 20 and 35 degrees Celsius. There doesn't appear to be a significant change in average temperature over the years, although it does vary slightly from year to year. There was one notable outlier around 1988 in July, and another in January 1982, both on the low end.
+
+Make a two-panel plot of (i)`tmin` vs `tmax` for the entire data set and (ii) distribution of snowfall values greater than 0 and less than 100 by year.
+```{r}
+temp_plot = 
+  noaa_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_hex() +
+  theme(legend.position = "right") +
+  labs(
+    title = "Minimum and maximum temperature",
+    x = "Minimum temperature (C)",
+    y = "Maximum temerature (C)"
+  )
+
+snow_plot = 
+  noaa_df %>% 
+  filter(snow > 0, snow < 100) %>% 
+  ggplot(aes(x = year, y = snow)) +
+  geom_violin() +
+  labs(
+    title = "Snowfall distribution",
+    x = "Year",
+    y = "Snowfall (mm)"
+  )
+
+(temp_plot + snow_plot)
+```
 
 
